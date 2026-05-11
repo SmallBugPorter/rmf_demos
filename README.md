@@ -45,16 +45,28 @@ Full web application of Open-RMF: [rmf-web](https://github.com/open-rmf/rmf-web)
 Start the backend API server via `docker` with host network access, using the default configuration. The API server will be accessible at `localhost:8000` by default.
 
 ```bash
+mkdir -p /tmp/rmf_web_api_run/log
+
 docker run \
   --network host -it --rm \
+  --ipc host \
+  --user "$(id -u):$(id -g)" \
   -e ROS_DOMAIN_ID=<ROS_DOMAIN_ID> \
   -e RMW_IMPLEMENTATION=<RMW_IMPLEMENTATION> \
+  -e ROS_LOG_DIR=/ws/run/log \
+  -v /tmp/rmf_web_api_run:/ws/run \
   ghcr.io/open-rmf/rmf-web/api-server:jazzy-nightly
 
 # Use the appropriate tag for different ROS 2 distributions
 ```
 
-> Note: The API server is also configurable by mounting the configuration file and setting the environment variable `RMF_API_SERVER_CONFIG`. In the default configuration, the API serer will use an internal non-persistent database.
+> Note: When `RMW_IMPLEMENTATION=rmw_fastrtps_cpp`, the API server container should share IPC with the host and run as the host user. Otherwise Fast DDS may discover the ROS graph but fail to receive the transient-local `map` topic, which leaves the web map blank. The `/tmp/rmf_web_api_run` bind mount keeps the local sqlite database, cached map images, and ROS logs writable across restarts.
+
+> Note: The API server is also configurable by mounting the configuration file and setting the environment variable `RMF_API_SERVER_CONFIG`.
+
+You can also launch the API server with the helper script in [scripts/run_rmf_web_api_server.bash](scripts/run_rmf_web_api_server.bash).
+
+If no component in your demo publishes `/fire_alarm_trigger`, the dashboard may log `previous fire alarm trigger not available` on startup. To provide a latched default `false` state for rmf-web, run [scripts/run_rmf_web_fire_alarm_latch.bash](scripts/run_rmf_web_fire_alarm_latch.bash) in another terminal.
 
 Start the frontend dashboard via `docker` with host network access, using the default configuration. The dashboard will be accessible at `localhost:3000` by default.
 

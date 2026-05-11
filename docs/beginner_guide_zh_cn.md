@@ -63,17 +63,17 @@ sudo apt install -y ros-jazzy-rmf-dev
 如果你还没有工作区，可以这样创建：
 
 ```bash
-mkdir -p ~/rmf_ws/src
-cd ~/rmf_ws/src
+mkdir -p ~/ros2_ws/src
+cd ~/ros2_ws/src
 git clone https://github.com/open-rmf/rmf_demos.git -b jazzy
 ```
 
-如果仓库已经存在于 `~/rmf_ws/src/rmf_demos`，可以直接跳到依赖安装和编译。
+如果仓库已经存在于 `~/ros2_ws/src/rmf_demos`，可以直接跳到依赖安装和编译。
 
 ### 3.1 安装源码依赖
 
 ```bash
-cd ~/rmf_ws
+cd ~/ros2_ws
 source /opt/ros/jazzy/setup.bash
 rosdep install --from-paths src --ignore-src --rosdistro $ROS_DISTRO -y
 ```
@@ -81,7 +81,7 @@ rosdep install --from-paths src --ignore-src --rosdistro $ROS_DISTRO -y
 ### 3.2 编译工作区
 
 ```bash
-cd ~/rmf_ws
+cd ~/ros2_ws
 source /opt/ros/jazzy/setup.bash
 colcon build
 ```
@@ -89,10 +89,10 @@ colcon build
 编译完成后，加载工作区环境：
 
 ```bash
-source ~/rmf_ws/install/setup.bash
+source ~/ros2_ws/install/setup.bash
 ```
 
-> 以后每开一个新终端，在运行 demo 前都要先执行一次 `source ~/rmf_ws/install/setup.bash`。
+> 以后每开一个新终端，在运行 demo 前都要先执行一次 `source ~/ros2_ws/install/setup.bash`。
 
 ## 4. 第一次运行：Office World
 
@@ -102,7 +102,7 @@ source ~/rmf_ws/install/setup.bash
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-source ~/rmf_ws/install/setup.bash
+source ~/ros2_ws/install/setup.bash
 ros2 launch rmf_demos_gz office.launch.xml
 ```
 
@@ -112,7 +112,7 @@ ros2 launch rmf_demos_gz office.launch.xml
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-source ~/rmf_ws/install/setup.bash
+source ~/ros2_ws/install/setup.bash
 ros2 run rmf_demos_tasks dispatch_patrol -p coe lounge -n 3 --use_sim_time
 ```
 
@@ -122,7 +122,7 @@ ros2 run rmf_demos_tasks dispatch_patrol -p coe lounge -n 3 --use_sim_time
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-source ~/rmf_ws/install/setup.bash
+source ~/ros2_ws/install/setup.bash
 ros2 run rmf_demos_tasks dispatch_delivery -p pantry -ph coke_dispenser -d hardware_2 -dh coke_ingestor --use_sim_time
 ```
 
@@ -166,8 +166,8 @@ ros2 run rmf_demos_tasks cancel_task -id patrol.dispatch-0
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-source ~/rmf_ws/install/setup.bash
-ros2 launch rmf_demos_gz hotel.launch.xml server_uri:="ws://localhost:8000/_internal"
+source ~/ros2_ws/install/setup.bash
+ros2 launch rmf_demos_gz office.launch.xml server_uri:="ws://localhost:8000/_internal"
 ```
 
 发送任务：
@@ -185,7 +185,7 @@ ros2 run rmf_demos_tasks dispatch_clean -cs clean_lobby --use_sim_time
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-source ~/rmf_ws/install/setup.bash
+source ~/ros2_ws/install/setup.bash
 ros2 launch rmf_demos_gz airport_terminal.launch.xml
 ```
 
@@ -240,7 +240,7 @@ sudo systemctl show --property=Environment docker
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-source ~/rmf_ws/install/setup.bash
+source ~/ros2_ws/install/setup.bash
 
 export ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
 export RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
@@ -251,15 +251,31 @@ echo "RMW_IMPLEMENTATION=$RMW_IMPLEMENTATION"
 
 ### 7.3 终端 3：启动 rmf-web 后端 API
 
+如果你不想手动输入较长的 `docker run` 命令，可以在这一步直接运行仓库自带脚本：
+
 ```bash
+~/ros2_ws/src/rmf_demos/scripts/run_rmf_web_api_server.bash
+```
+
+上面这个脚本和下面的 `docker run` 命令作用相同，二选一即可。
+
+```bash
+mkdir -p /tmp/rmf_web_api_run/log
+
 docker run --rm -it \
   --network host \
+  --ipc host \
+  --user "$(id -u):$(id -g)" \
   -e ROS_DOMAIN_ID=$ROS_DOMAIN_ID \
   -e RMW_IMPLEMENTATION=$RMW_IMPLEMENTATION \
+  -e ROS_LOG_DIR=/ws/run/log \
+  -v /tmp/rmf_web_api_run:/ws/run \
   ghcr.io/open-rmf/rmf-web/api-server:jazzy-nightly
 ```
 
 这个终端保持运行，不要关闭。
+
+如果省略 `--ipc host` 或 `--user "$(id -u):$(id -g)"`，在 `rmw_fastrtps_cpp` 下可能出现“Web 能打开，但地图为空白”的情况。这是因为容器虽然能发现 ROS 话题，但收不到 `map` 话题里的实际数据。
 
 ### 7.4 终端 4：启动 rmf-web 前端 Dashboard
 
@@ -271,13 +287,21 @@ docker run --rm -it \
 
 这个终端也保持运行，不要关闭。
 
+如果你想避免页面里出现 `previous fire alarm trigger not available` 的告警，可额外开一个终端运行：
+
+```bash
+~/ros2_ws/src/rmf_demos/scripts/run_rmf_web_fire_alarm_latch.bash
+```
+
+这个脚本会为 `/fire_alarm_trigger` 提供一个带 `transient_local` QoS 的默认 `false` 状态，并在后续告警状态变化时继续保持最新值可被 rmf-web 缓存。
+
 ### 7.5 终端 1：重启 Office，并加上 server_uri
 
 你现在已经在跑 `office.launch.xml`，需要先在终端 1 按 `Ctrl+C` 停掉，再用下面命令重启：
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-source ~/rmf_ws/install/setup.bash
+source ~/ros2_ws/install/setup.bash
 ros2 launch rmf_demos_gz office.launch.xml server_uri:="ws://localhost:8000/_internal"
 ```
 
@@ -285,7 +309,7 @@ ros2 launch rmf_demos_gz office.launch.xml server_uri:="ws://localhost:8000/_int
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-source ~/rmf_ws/install/setup.bash
+source ~/ros2_ws/install/setup.bash
 ros2 run rmf_demos_tasks dispatch_patrol -p coe -n 3 --use_sim_time
 ```
 
@@ -305,7 +329,7 @@ ros2 run rmf_demos_tasks dispatch_patrol -p coe -n 3 --use_sim_time
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-source ~/rmf_ws/install/setup.bash
+source ~/ros2_ws/install/setup.bash
 ```
 
 ### 8.2 只装了 RMF，没有编译 rmf_demos
@@ -328,13 +352,13 @@ source ~/rmf_ws/install/setup.bash
 
 ## 10. 最短可执行流程
 
-如果你已经具备 Jazzy 环境，并且仓库就在 `~/rmf_ws/src/rmf_demos`，最短流程如下：
+如果你已经具备 Jazzy 环境，并且仓库就在 `~/ros2_ws/src/rmf_demos`，最短流程如下：
 
 ```bash
-cd ~/rmf_ws
+cd ~/ros2_ws
 source /opt/ros/jazzy/setup.bash
 colcon build
-source ~/rmf_ws/install/setup.bash
+source ~/ros2_ws/install/setup.bash
 ros2 launch rmf_demos_gz office.launch.xml
 ```
 
@@ -342,7 +366,7 @@ ros2 launch rmf_demos_gz office.launch.xml
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-source ~/rmf_ws/install/setup.bash
+source ~/ros2_ws/install/setup.bash
 ros2 run rmf_demos_tasks dispatch_patrol -p coe lounge -n 3 --use_sim_time
 ```
 

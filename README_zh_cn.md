@@ -48,16 +48,28 @@ Open-RMF 的完整 Web 应用：[rmf-web](https://github.com/open-rmf/rmf-web)�
 使用默认配置通过 `docker` 启动后端 API 服务器，并启用主机网络访问。API 服务器默认可以通过 `localhost:8000` 访问。
 
 ```bash
+mkdir -p /tmp/rmf_web_api_run/log
+
 docker run \
   --network host -it --rm \
+  --ipc host \
+  --user "$(id -u):$(id -g)" \
   -e ROS_DOMAIN_ID=<ROS_DOMAIN_ID> \
   -e RMW_IMPLEMENTATION=<RMW_IMPLEMENTATION> \
+  -e ROS_LOG_DIR=/ws/run/log \
+  -v /tmp/rmf_web_api_run:/ws/run \
   ghcr.io/open-rmf/rmf-web/api-server:jazzy-nightly
 
 # 对于不同 ROS 2 发行版请使用适当的标签
 ```
 
-> 注意：通过挂载配置文件并设置环境变量 `RMF_API_SERVER_CONFIG`，也可以配置 API 服务器。在默认配置中，API 服务器将使用内部的非持久数据库。
+> 注意：当 `RMW_IMPLEMENTATION=rmw_fastrtps_cpp` 时，API 服务器容器需要与宿主机共享 IPC，并以宿主机相同的 UID/GID 运行。否则 Fast DDS 可能只能发现 ROS 图谱，却收不到 `transient_local` 的 `map` 话题，最终表现为 Web 地图空白。这里挂载的 `/tmp/rmf_web_api_run` 会保存本地 sqlite 数据库、缓存地图图片和 ROS 日志，并确保它们在重启后仍可写。
+
+> 注意：通过挂载配置文件并设置环境变量 `RMF_API_SERVER_CONFIG`，也可以配置 API 服务器。
+
+你也可以直接使用辅助脚本 [scripts/run_rmf_web_api_server.bash](scripts/run_rmf_web_api_server.bash) 启动 API 服务器。
+
+如果当前演示环境里没有组件持续发布 `/fire_alarm_trigger`，dashboard 启动时可能会打印 `previous fire alarm trigger not available`。若希望 rmf-web 始终拿到一个默认的 `false` 状态，可在另一个终端运行 [scripts/run_rmf_web_fire_alarm_latch.bash](scripts/run_rmf_web_fire_alarm_latch.bash)。
 
 通过 `docker` 启动前端仪表板，并启用主机网络访问。仪表板默认可以通过 `localhost:3000` 访问。
 
