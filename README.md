@@ -28,6 +28,9 @@ These demos were built and tested on
 ## Installation
 Instructions can be found [here](https://github.com/open-rmf/rmf).
 
+## Beginner Guide
+For a step-by-step beginner guide in Chinese for the `jazzy` branch, see [docs/beginner_guide_zh_cn.md](docs/beginner_guide_zh_cn.md).
+
 ## FAQ
 Answers to frequently asked questions can be found [here](docs/faq.md).
 

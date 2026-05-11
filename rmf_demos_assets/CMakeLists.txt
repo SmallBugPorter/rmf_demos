@@ -11,4 +11,9 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
+install(
+  DIRECTORY models/
+  DESTINATION share/${PROJECT_NAME}/models/Open-RMF
+)
+
 ament_package()
