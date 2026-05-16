@@ -2,12 +2,14 @@
 
 <launch>
   <arg name="use_sim_time" default="true"/>
+  <arg name="server_uri" default=""/>
   <!-- true for using traffic light, false for using full control -->
   <arg name="use_traffic_light" default="false"/>
 
   <!-- Common launch -->
   <include file="$(find-pkg-share rmf_demos)/common.launch.xml">
     <arg name="use_sim_time" value="true"/>
+    <arg name="server_uri" value="$(var server_uri)"/>
     <arg name="viz_config_file" value ="$(find-pkg-share rmf_demos)/include/battle_royale/rviz.rviz"/>
     <arg name="config_file" value="$(find-pkg-share rmf_demos_maps)/battle_royale/battle_royale.building.yaml"/>
   </include>

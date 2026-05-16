@@ -2,11 +2,13 @@
 
 <launch>
   <arg name="use_sim_time" default="false"/>
+  <arg name="server_uri" default=""/>
   <arg name="enable_experimental_lift_watchdog" default="false" description="experimental lift watchdog"/>
 
   <!-- Common launch -->
   <include file="$(find-pkg-share rmf_demos)/common.launch.xml">
     <arg name="use_sim_time" value="$(var use_sim_time)"/>
+    <arg name="server_uri" value="$(var server_uri)"/>
     <arg name="viz_config_file" value ="$(find-pkg-share rmf_demos)/include/hotel/hotel.rviz"/>
     <arg name="config_file" value="$(find-pkg-share rmf_demos_maps)/hotel/hotel.building.yaml"/>
   </include>

@@ -221,6 +221,8 @@ sudo usermod -aG docker $USER
 
 配置docker代理
 ```bash
+sudo mkdir -p /etc/systemd/system/docker.service.d
+
 sudo tee /etc/systemd/system/docker.service.d/http-proxy.conf >/dev/null <<'EOF'
 [Service]
 Environment="HTTP_PROXY=http://127.0.0.1:7897"
@@ -230,7 +232,6 @@ EOF
 
 sudo systemctl daemon-reload
 sudo systemctl restart docker
-
 sudo systemctl show --property=Environment docker
 ```
 
@@ -259,10 +260,10 @@ echo "RMW_IMPLEMENTATION=$RMW_IMPLEMENTATION"
 
 上面这个脚本和下面的 `docker run` 命令作用相同，二选一即可。
 
-```bash
+```bash\
+rm -rf /tmp/rmf_web_api_run
 mkdir -p /tmp/rmf_web_api_run/log
-
-docker run --rm -it \
+sudo docker run --rm -it \
   --network host \
   --ipc host \
   --user "$(id -u):$(id -g)" \
@@ -280,7 +281,7 @@ docker run --rm -it \
 ### 7.4 终端 4：启动 rmf-web 前端 Dashboard
 
 ```bash
-docker run --rm -it \
+sudo docker run --rm -it \
   --network host \
   ghcr.io/open-rmf/rmf-web/demo-dashboard:jazzy-nightly
 ```
