@@ -1,48 +1,48 @@
-# FLEET CONFIG =================================================================
-# RMF Fleet parameters
+# 车队配置 =================================================================
+# RMF 车队参数
 
 rmf_fleet:
-  name: "tinyRobot"
-  limits:
-    linear: [0.5, 0.75] # velocity, acceleration
-    angular: [0.6, 2.0] # velocity, acceleration
-  profile: # Robot profile is modelled as a circle
-    footprint: 0.3 # radius in m
-    vicinity: 0.5 # radius in m
-  reversible: True # whether robots in this fleet can reverse
-  battery_system:
-    voltage: 12.0 # V
-    capacity: 24.0 # Ahr
-    charging_current: 5.0 # A
-  mechanical_system:
-    mass: 20.0 # kg
-    moment_of_inertia: 10.0 #kgm^2
-    friction_coefficient: 0.22
-  ambient_system:
-    power: 20.0 # W
-  tool_system:
-    power: 0.0 # W
-  recharge_threshold: 0.10 # Battery level below which robots in this fleet will not operate
-  recharge_soc: 1.0 # Battery level to which robots in this fleet should be charged up to during recharging tasks
-  publish_fleet_state: 10.0 # Publish frequency for fleet state, ensure that it is same as robot_state_update_frequency
-  account_for_battery_drain: True
-  task_capabilities: # Specify the types of RMF Tasks that robots in this fleet are capable of performing
-    loop: True
-    delivery: True
-  actions: ["teleop"]
-  finishing_request: "park" # [park, charge, nothing]
-  responsive_wait: True # Should responsive wait be on/off for the whole fleet by default? False if not specified.
-  reassign_task_interval: 120 # seconds, specify how often a task reassignment should be triggered in the fleet
-  robots:
-    tinyRobot1:
-        charger: "tinyRobot1_charger"
-        responsive_wait: False # Should responsive wait be on/off for this specific robot? Overrides the fleet-wide setting.
-    tinyRobot2:
-        charger: "tinyRobot2_charger"
-        # No mention of responsive_wait means the fleet-wide setting will be used
+  name: "tinyRobot" # 车队名称
+  limits: # 运动限制
+    linear: [0.5, 0.75] # 速度, 加速度
+    angular: [0.6, 2.0] # 速度, 加速度
+  profile: # 机器人轮廓建模为圆形
+    footprint: 0.3 # 半径，单位：米
+    vicinity: 0.5 # 半径，单位：米
+  reversible: True # 车队中的机器人是否可倒退
+  battery_system: # 电池系统参数
+    voltage: 12.0 # 伏特
+    capacity: 24.0 # 安时
+    charging_current: 5.0 # 安培
+  mechanical_system: # 机械系统参数
+    mass: 20.0 # 千克
+    moment_of_inertia: 10.0 # 千克·平方米
+    friction_coefficient: 0.22 # 摩擦系数
+  ambient_system: # 环境功耗（待机功耗）
+    power: 20.0 # 瓦特
+  tool_system: # 工具功耗（末端执行器等）
+    power: 0.0 # 瓦特
+  recharge_threshold: 0.10 # 电量低于此阈值时，车队中的机器人将停止运行
+  recharge_soc: 1.0 # 充电任务中机器人应充至的目标电量水平
+  publish_fleet_state: 10.0 # 车队状态发布频率，请确保与 robot_state_update_frequency 保持一致
+  account_for_battery_drain: True # 是否考虑电池消耗：True 则自动分配充电任务，False 则忽略电量
+  task_capabilities: # 指定本车队机器人能够执行的 RMF 任务类型
+    loop: True # 循环任务
+    delivery: True # 配送任务
+  actions: ["teleop"] # 可执行的动作列表
+  finishing_request: "park" # 可选值：[park, charge, nothing]
+  responsive_wait: True # 整个车队默认是否启用响应式等待？未指定时默认为 False。
+  reassign_task_interval: 120 # 任务重新分配的触发间隔，单位：秒
+  robots: # 机器人列表
+    tinyRobot1: # 机器人名称
+        charger: "tinyRobot1_charger" # 指定充电桩
+        responsive_wait: False # 该机器人是否启用响应式等待？会覆盖车队级别的设置。
+    tinyRobot2: # 机器人名称
+        charger: "tinyRobot2_charger" # 指定充电桩
+        # 未指定 responsive_wait 表示将使用车队级别的设置
 
-fleet_manager:
-  ip: "127.0.0.1"
-  port: 22011
-  user: "some_user"
-  password: "some_password"
+fleet_manager: # 车队管理器连接参数
+  ip: "127.0.0.1" # IP 地址
+  port: 22011 # 端口号
+  user: "some_user" # 用户名
+  password: "some_password" # 密码
